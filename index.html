@@ -1,0 +1,1191 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AD X-RAY">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>AD X-RAY — Veja o que existe por trás de um anúncio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#000; --ink:#fff; --mute:#a3a3a3; --dim:#6f6f6f;
+  --card:#141414; --card2:#1c1c1c; --line:#2b2b2b; --line2:#404040;
+  --red:#f0180f; --red2:#b30c07; --glow:rgba(240,24,15,.32);
+  --display:"Archivo","Arial Narrow",Impact,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 110px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body.lock{overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:6px}
+.glow{position:fixed;inset:0 0 auto 0;height:70vh;pointer-events:none;background:radial-gradient(60% 60% at 75% 0%,rgba(240,24,15,.22),transparent 70%);z-index:0}
+.disp{font-family:var(--display);font-stretch:118%;font-weight:900;text-transform:uppercase;letter-spacing:-.01em;line-height:.94}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(0,0,0,.84);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:24px}
+.logo{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;font-family:var(--display);font-stretch:118%;font-weight:900;font-size:19px;letter-spacing:.02em}
+.logo svg{width:26px;height:26px}
+.logo b{color:var(--red)}
+.steps{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-width:0}
+.st{background:none;border:0;padding:8px 2px;display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-size:12.5px;letter-spacing:.07em;color:var(--dim);position:relative;white-space:nowrap}
+.st .n{font-stretch:110%}
+.st:disabled{cursor:default}
+.st.done{color:var(--mute)}
+.st.on{color:#fff}
+.st.on .n{color:var(--red)}
+.st.on::after{content:"";position:absolute;left:0;right:0;bottom:-13px;height:2px;background:var(--red);box-shadow:0 0 12px var(--red)}
+.sep{flex:0 1 44px;height:1px;background:var(--line2);min-width:10px}
+.lib-btn{margin-left:auto;background:none;border:1px solid var(--line2);border-radius:10px;padding:8px 14px;font-family:var(--display);font-weight:700;font-size:12.5px;letter-spacing:.06em;display:flex;gap:8px;align-items:center;transition:border-color .2s,background .2s}
+.lib-btn:hover{border-color:var(--red);background:rgba(240,24,15,.08)}
+.lib-btn svg{width:16px;height:16px}
+
+main{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+.backrow{min-height:34px;margin-bottom:6px}
+.back{background:none;border:0;padding:6px 0;color:var(--mute);font-family:var(--display);font-weight:700;letter-spacing:.06em;font-size:13px;transition:color .2s,transform .2s}
+.back:hover{color:#fff;transform:translateX(-3px)}
+.page.in-r{animation:inr .38s cubic-bezier(.2,.8,.2,1)}
+.page.in-l{animation:inl .38s cubic-bezier(.2,.8,.2,1)}
+.page.out-l{animation:outl .2s ease-in forwards}
+.page.out-r{animation:outr .2s ease-in forwards}
+@keyframes inr{from{opacity:0;transform:translateX(48px)}to{opacity:1;transform:none}}
+@keyframes inl{from{opacity:0;transform:translateX(-48px)}to{opacity:1;transform:none}}
+@keyframes outl{to{opacity:0;transform:translateX(-36px)}}
+@keyframes outr{to{opacity:0;transform:translateX(36px)}}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:12px;border:0;border-radius:10px;padding:17px 28px;font-family:var(--display);font-stretch:110%;font-weight:800;font-size:15px;letter-spacing:.06em;background:linear-gradient(180deg,#ff2b21,#c80e08);color:#fff;box-shadow:0 8px 28px -8px var(--glow),inset 0 1px 0 rgba(255,255,255,.25);transition:transform .2s,box-shadow .2s,filter .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 14px 34px -8px rgba(240,24,15,.6),inset 0 1px 0 rgba(255,255,255,.3);filter:brightness(1.08)}
+.btn:active{transform:none}
+.btn .ar{transition:transform .2s}
+.btn:hover .ar{transform:translateX(4px)}
+.btn.ghost{background:transparent;border:1px solid var(--line2);box-shadow:none;color:#fff}
+.btn.ghost:hover{border-color:#fff;filter:none;box-shadow:none}
+.btn.sm{padding:10px 16px;font-size:12.5px;border-radius:9px}
+.btn.big{padding:22px 40px;font-size:17px;width:100%}
+.txtbtn{background:none;border:0;color:var(--mute);text-decoration:underline;text-underline-offset:4px;padding:8px 0}
+.txtbtn:hover{color:#fff}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.6fr .7fr;gap:44px;align-items:center;padding:34px 0 30px}
+.tagline{margin:0 0 20px;color:var(--mute);font-size:15px;letter-spacing:.02em}
+h1.h1{margin:0;font-size:clamp(36px,5.6vw,76px);font-stretch:104%}
+.hl-block{display:block;width:fit-content;max-width:100%;text-wrap:balance;background:var(--red);color:#000;padding:.08em .16em .03em;margin-bottom:.1em}
+.hl-red{display:block;text-wrap:balance;color:var(--red);text-shadow:0 0 40px rgba(240,24,15,.35)}
+.sub{margin:26px 0 0;max-width:620px;font-size:clamp(16px,1.6vw,19px);color:#d4d4d4}
+.hero-ad{justify-self:center;width:100%;max-width:300px}
+
+.panel{max-width:900px;background:linear-gradient(180deg,#161616,#0e0e0e);border:1px solid var(--line);border-radius:18px;padding:30px;box-shadow:0 30px 80px -30px rgba(240,24,15,.28)}
+.panel h2{margin:0 0 20px;font-size:22px;font-family:var(--display);font-stretch:112%;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
+.lbl{display:block;margin:0 0 8px;font-weight:600;font-size:14px;color:#e6e6e6}
+.inp{width:100%;background:#0a0a0a;border:1px solid var(--line2);border-radius:10px;padding:15px 16px;color:#fff;transition:border-color .2s,box-shadow .2s}
+.inp::placeholder{color:#666}
+.inp:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(240,24,15,.22)}
+textarea.inp{min-height:130px;resize:vertical}
+.or{display:flex;align-items:center;gap:14px;margin:24px 0 14px;font-family:var(--display);font-weight:700;font-size:12.5px;letter-spacing:.1em;color:var(--dim)}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:8px;background:#0a0a0a;border:1px solid var(--line2);border-radius:999px;padding:10px 16px;font-size:14px;transition:border-color .2s,background .2s}
+.chip:hover:not(:disabled){border-color:var(--red)}
+.chip[aria-pressed=true]{border-color:var(--red);background:rgba(240,24,15,.12)}
+.chip:disabled{opacity:.45;cursor:not-allowed}
+.chip svg{width:16px;height:16px}
+.chip em{font-style:normal;font-size:11px;color:var(--dim);border:1px solid var(--line2);border-radius:999px;padding:1px 7px}
+.fileinfo{margin-top:12px;display:flex;align-items:center;gap:12px;font-size:14px;color:var(--mute)}
+.fileinfo img{width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--line2)}
+.more{margin-top:18px}
+.more summary{cursor:pointer;color:var(--mute);font-size:14px;padding:6px 0}
+.more summary:hover{color:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.hint{margin:8px 0 0;font-size:13px;color:var(--dim)}
+.err{margin:16px 0 0;padding:12px 14px;border:1px solid var(--red);border-radius:10px;background:rgba(240,24,15,.08);color:#ffd7d5;font-size:14.5px}
+.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:26px}
+.foot{max-width:900px;margin:56px 0 0;padding-top:22px;border-top:1px solid var(--line);color:var(--dim);font-size:14px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.foot b{font-family:var(--display);font-stretch:118%;font-weight:900;letter-spacing:.03em;color:#fff}
+.foot b i{font-style:normal;color:var(--red)}
+
+/* mock ad */
+.ad{position:relative;width:100%;aspect-ratio:4/5;background:#0d0d0d;border:1px solid var(--line2);border-radius:16px;overflow:hidden;display:grid;grid-template-rows:11% 17% 1fr 13%}
+.ad-top{display:flex;align-items:center;gap:8px;padding:0 12px;font-size:11px;color:var(--mute)}
+.ad-top i{width:20px;height:20px;border-radius:50%;background:#333}
+.ad-top b{color:#ddd;font-weight:600}
+.ad-top small{margin-left:auto;font-size:10px}
+.ad-copy{padding:2px 14px;font-size:13px;line-height:1.3;color:#fff;font-weight:600;display:flex;align-items:center}
+.ad-media{margin:0 10px;border-radius:10px;background:linear-gradient(135deg,#2a0806,#0c0c0c 60%);position:relative;display:grid;place-items:center;overflow:hidden}
+.ad-media .dev{width:34%;aspect-ratio:9/16;border:1.5px solid #555;border-radius:12px;background:#111;display:grid;place-items:center}
+.ad-media .dev::after{content:"";width:0;height:0;border-left:14px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px}
+.ad-cta{display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:11px;color:var(--mute)}
+.ad-cta span{background:#2a2a2a;color:#fff;border-radius:6px;padding:7px 12px;font-weight:600}
+.sweep{position:absolute;left:0;right:0;top:0;height:3px;background:var(--red);box-shadow:0 0 24px 6px var(--glow);opacity:0;animation:sweep 1.5s .3s ease-in-out forwards;z-index:3}
+@keyframes sweep{0%{top:0;opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
+.zone{position:absolute;left:8px;right:8px;border:1.5px solid var(--red);border-radius:8px;opacity:0;animation:zin .4s forwards;z-index:2}
+.zone b{position:absolute;left:-1px;top:-1px;background:var(--red);color:#fff;font:800 9.5px/1 var(--display);letter-spacing:.08em;padding:4px 6px;border-radius:7px 0 7px 0}
+.z1{top:11%;height:17%;animation-delay:.6s}
+.z2{top:29%;height:57%;animation-delay:1s}
+.z3{top:87%;height:13%;animation-delay:1.4s;border-radius:8px 8px 0 0}
+@keyframes zin{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.ad-img{display:block;aspect-ratio:auto;max-height:420px}
+.ad-img img{display:block;width:100%;height:auto;max-height:420px;object-fit:contain;background:#000}
+.cap{margin:10px 0 0;font-size:12.5px;color:var(--dim)}
+.card p.cap{margin:10px 0 0;font-size:12.5px;color:var(--dim)}
+.copybox{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:12px;background:#0b0b0b;font-size:14px;line-height:1.6;color:#cfcfcf;max-height:340px;overflow:auto}
+.copybox mark{background:transparent;color:#fff;border-bottom:2px solid var(--red);padding:0 1px}
+.copybox mark.cta{border-bottom-style:dashed}
+.copybox small{display:block;margin-bottom:8px;color:var(--dim);font-size:12px}
+
+/* tags */
+.tag{display:inline-block;flex:none;font:700 10.5px/1 var(--display);letter-spacing:.07em;padding:5px 8px;border-radius:6px;border:1px solid var(--line2);color:#ddd;white-space:nowrap}
+.t-inf{border-color:var(--red);color:#ff8a84}
+.t-sug{border-style:dashed;border-color:#8a8a8a;color:#cfcfcf}
+.t-na,.t-ni{color:var(--dim);border-color:var(--line)}
+
+/* page 2 */
+.pt{margin:6px 0 4px;font-size:clamp(34px,5.4vw,64px)}
+.pt-sub{margin:0 0 26px;color:var(--mute);word-break:break-word}
+.banner{margin:0 0 22px;padding:14px 16px;border:1px solid var(--line2);border-left:3px solid var(--red);border-radius:10px;background:#0d0d0d;font-size:14.5px;color:#d8d8d8}
+.banner p{margin:0}
+.banner p+p{margin-top:6px;color:var(--mute)}
+.top2{display:grid;grid-template-columns:.8fr 1.2fr;gap:22px;align-items:start;margin-bottom:22px}
+.card{background:linear-gradient(180deg,#161616,#0f0f0f);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 18px 40px -26px #000;transition:border-color .25s,transform .25s,box-shadow .25s}
+.card:hover{border-color:#5a1512;transform:translateY(-2px);box-shadow:0 22px 44px -22px var(--glow)}
+.card.flat:hover{transform:none;border-color:var(--line);box-shadow:0 18px 40px -26px #000}
+.reveal{opacity:0;transform:translateY(10px);transition:opacity .4s var(--d,0ms),transform .4s var(--d,0ms),border-color .25s,box-shadow .25s}
+.reveal.in{opacity:1;transform:none}
+.diag{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center}
+.gwrap{position:relative;width:240px}
+.gauge{display:block;width:100%;overflow:visible}
+.g-bg{fill:none;stroke:#242424;stroke-width:14;stroke-linecap:round}
+.g-fg{fill:none;stroke:url(#gg);stroke-width:14;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset 1.3s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 8px var(--glow))}
+.g-num{position:absolute;left:0;right:0;bottom:2px;text-align:center;line-height:1}
+.g-num b{font:900 78px/1 var(--display);font-stretch:112%}
+.g-num span{font:700 20px var(--display);color:var(--dim)}
+.diag h3{margin:0 0 8px;font:800 15px var(--display);letter-spacing:.07em;text-transform:uppercase}
+.diag p{margin:0;color:var(--mute);font-size:14.5px}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.cards .wide{grid-column:1/-1}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.ch h3{margin:0;font:800 15px var(--display);font-stretch:108%;letter-spacing:.06em;text-transform:uppercase;display:flex;gap:10px;align-items:baseline}
+.ch h3 i{font-style:normal;color:var(--red)}
+.big-q{margin:0 0 10px;font:700 clamp(19px,2.2vw,24px)/1.25 var(--body)}
+.cls{display:inline-block;margin:0 0 12px;font:800 12.5px var(--display);letter-spacing:.06em;text-transform:uppercase;color:#ff8a84}
+.card p{margin:0 0 10px;color:#cfcfcf;font-size:15px}
+.card p:last-child{margin-bottom:0}
+.bar{height:8px;border-radius:99px;background:#232323;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--red2),var(--red));transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.barrow{display:flex;justify-content:space-between;font-size:13px;color:var(--mute);margin:14px 0 7px}
+.barrow b{color:#fff;font-family:var(--display);font-size:15px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.pill{border:1px solid var(--line2);border-radius:999px;padding:5px 12px;font-size:13px;color:#e6e6e6}
+.warn{margin-top:12px;font-size:12.5px;color:var(--dim);border-top:1px dashed var(--line2);padding-top:10px}
+.kv{display:grid;gap:12px}
+.kv div{display:grid;grid-template-columns:150px 1fr auto;gap:12px;align-items:start;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.kv div:last-child{border:0;padding:0}
+.kv dt{color:var(--dim);font-size:13.5px}
+.kv dd{margin:0;font-size:14.5px;color:#e4e4e4}
+.na-v{color:var(--dim)!important}
+.kv .tag{justify-self:start}
+.t-plan{border-color:#fff;color:#fff}
+.err.info{border-color:var(--line2);border-left:3px solid var(--red);background:#0d0d0d;color:#e6e6e6}
+.ad-img video{display:block;width:100%;max-height:420px;background:#000}
+.refl{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:13.5px;color:#fff;border:1px solid var(--line2);border-radius:8px;padding:8px 12px;text-decoration:none;transition:border-color .2s}
+.refl:hover{border-color:var(--red)}
+.fun{list-style:none;margin:14px 0 0;padding:0}
+.fun li{display:grid;grid-template-columns:44px 1fr;gap:16px;padding:0 0 22px;position:relative}
+.fun li:last-child{padding-bottom:0}
+.fun li::before{content:"";position:absolute;left:21px;top:46px;bottom:2px;width:2px;background:var(--line2)}
+.fun li:last-child::before{display:none}
+.fun .nb{width:44px;height:44px;border-radius:12px;border:1px solid var(--red);display:grid;place-items:center;font:900 15px var(--display);background:#000}
+.fun h4{margin:2px 0 4px;font:800 16px var(--display);letter-spacing:.05em;text-transform:uppercase;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fun p{margin:0;color:#cfcfcf;font-size:14.5px}
+.mtr{display:grid;grid-template-columns:1.1fr 1.3fr 1fr;gap:14px;padding:14px 4px;border-bottom:1px solid var(--line);align-items:center}
+.mtr:last-child{border:0}
+.mtr.h{font:800 11.5px var(--display);letter-spacing:.07em;text-transform:uppercase;color:var(--dim);padding-top:0}
+.mtr b{font:800 clamp(17px,2vw,21px)/1.2 var(--display);font-stretch:108%}
+.mtr .fix{color:var(--mute);font-size:14.5px}
+.plan-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.crea{display:grid;grid-template-columns:1fr 1fr;gap:12px 28px}
+
+.sec-h{margin:44px 0 6px;font-size:clamp(26px,3.6vw,42px)}
+.sec-sub{margin:0 0 20px;color:var(--mute)}
+.flow{position:relative;display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.flow::before{content:"";position:absolute;left:4%;right:4%;top:33px;height:2px;background:var(--red);transform-origin:left;transform:scaleX(0);transition:transform 1.5s ease-out;box-shadow:0 0 10px var(--glow);opacity:.55}
+.flow.go::before{transform:scaleX(1)}
+.fs{position:relative;z-index:1;background:#101010;border:1px solid var(--line);border-radius:14px;padding:14px 12px 16px;text-align:left;transition:border-color .25s,background .25s,transform .25s,opacity .3s;opacity:.35}
+.fs.lit{opacity:1}
+.fs:hover{transform:translateY(-3px);border-color:var(--red)}
+.fs[aria-pressed=true]{border-color:var(--red);background:#1a0a09}
+.fs .ic{width:38px;height:38px;border-radius:10px;border:1px solid var(--line2);background:#000;display:grid;place-items:center;margin-bottom:12px;font:800 13px var(--display);color:var(--dim)}
+.fs.yes .ic{border-color:var(--red);color:#fff;box-shadow:0 0 16px -4px var(--glow)}
+.fs b{display:block;font:800 13px var(--display);letter-spacing:.05em;text-transform:uppercase}
+.fs small{display:block;margin-top:4px;color:var(--dim);font-size:12px}
+.fs.yes small{color:#ff8a84}
+.detail{margin-top:14px;min-height:88px}
+.detail h4{margin:0 0 8px;display:flex;gap:10px;align-items:center;font:800 16px var(--display);letter-spacing:.05em;text-transform:uppercase}
+.detail blockquote{margin:10px 0 0;padding:10px 14px;border-left:2px solid var(--red);background:#0b0b0b;border-radius:0 8px 8px 0;color:#e2e2e2;font-size:14.5px}
+.cta-end{margin-top:40px}
+
+/* page 3 */
+.dna{display:grid;gap:0}
+.dna-r{display:grid;grid-template-columns:190px 1fr auto;gap:16px;align-items:center;padding:16px 4px;border-bottom:1px solid var(--line)}
+.dna-r:last-child{border:0}
+.dna-r span{font:800 13px var(--display);letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.dna-r strong{font:700 clamp(17px,2vw,21px)/1.25 var(--body);color:#fff}
+.dna-r strong::before{content:"→ ";color:var(--red)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.li{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.li li{padding-left:18px;position:relative;font-size:14.5px;color:#d6d6d6}
+.li li::before{content:"";position:absolute;left:0;top:.6em;width:7px;height:7px;border-radius:2px;background:var(--red)}
+.li.t li::before{background:transparent;border:1.5px solid #8a8a8a}
+.tests{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.test .k{font:800 12px var(--display);letter-spacing:.08em;color:var(--red);margin-bottom:10px;display:block}
+.test h4{margin:0 0 8px;font:700 18px/1.3 var(--body)}
+.test p{font-size:14px!important;color:var(--mute)!important}
+
+/* page 4 */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:8px 0 24px;overflow-x:auto}
+.tab{background:none;border:0;border-bottom:2px solid transparent;padding:12px 16px;margin-bottom:-1px;font:800 13.5px var(--display);letter-spacing:.07em;color:var(--dim);transition:color .2s,border-color .2s;white-space:nowrap}
+.tab:hover{color:#fff}
+.tab[aria-selected=true]{color:#fff;border-color:var(--red)}
+.lab-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.lab-head p{margin:0;color:var(--mute);font-size:14.5px;max-width:560px}
+.list{display:grid;gap:14px}
+.item{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start}
+.item h4{margin:0 0 6px;font:800 12.5px var(--display);letter-spacing:.07em;text-transform:uppercase;color:#ff8a84}
+.item q{display:block;quotes:"“" "”";font:600 clamp(17px,2vw,20px)/1.35 var(--body)}
+.item .meta{margin-top:8px;color:var(--dim);font-size:13px}
+.cpy{background:none;border:1px solid var(--line2);border-radius:8px;padding:8px 14px;font:800 12px var(--display);letter-spacing:.08em;transition:border-color .2s,background .2s,color .2s;white-space:nowrap}
+.cpy:hover{border-color:var(--red);background:rgba(240,24,15,.1)}
+.cpy.ok{border-color:#fff;color:#fff}
+.ang{display:grid;gap:8px}
+.ang dl{margin:0;display:grid;gap:8px}
+.ang dt{font:800 11.5px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.ang dd{margin:0 0 6px;font-size:14.5px;color:#d6d6d6}
+.seq{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.seq span{font:700 11px var(--display);letter-spacing:.06em;text-transform:uppercase;color:#ff8a84;border:1px solid #4a1512;border-radius:6px;padding:4px 8px}
+.body-l{display:grid;gap:10px}
+.body-l p{margin:0!important;font-size:15px!important;color:#e6e6e6!important}
+.body-l p b{display:inline-block;min-width:112px;font:800 11.5px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.note{margin-top:14px;font-size:12.5px;color:var(--dim)}
+.subtabs{display:flex;gap:8px;margin-bottom:16px}
+.subtabs .chip[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
+.scenes{display:grid;gap:12px}
+.scene{display:grid;grid-template-columns:100px 1fr;gap:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#101010}
+.scene .tm{font:900 22px var(--display);font-stretch:112%;color:var(--red);line-height:1.05}
+.scene .tm small{display:block;font:600 11px var(--body);color:var(--dim);margin-top:4px;letter-spacing:0}
+.scene dl{margin:0;display:grid;grid-template-columns:120px 1fr;gap:6px 14px;font-size:14.5px}
+.scene dt{color:var(--dim);font:800 11.5px/1.9 var(--display);letter-spacing:.07em;text-transform:uppercase}
+.scene dd{margin:0;color:#e4e4e4}
+.ctas{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ctas .card{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.ctas q{quotes:"“" "”";font:600 18px var(--body)}
+.end-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
+
+/* loader */
+.loader{position:fixed;inset:0;z-index:100;background:#000;display:grid;place-items:center;overflow:hidden;background-image:linear-gradient(rgba(240,24,15,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(240,24,15,.07) 1px,transparent 1px);background-size:44px 44px}
+.scan{position:absolute;left:0;right:0;top:0;height:120px;background:linear-gradient(180deg,transparent,rgba(240,24,15,.22));border-bottom:2px solid var(--red);box-shadow:0 8px 40px var(--glow);animation:scan 1.7s linear infinite}
+@keyframes scan{from{transform:translateY(-120px)}to{transform:translateY(100vh)}}
+.ld{position:relative;width:min(460px,calc(100vw - 40px));padding:28px;border:1px solid var(--line2);border-radius:18px;background:rgba(10,10,10,.9)}
+.ld h3{margin:0 0 18px;font:900 22px var(--display);font-stretch:115%;letter-spacing:.04em;text-transform:uppercase}
+.ld ul{list-style:none;margin:0 0 20px;padding:0;display:grid;gap:8px}
+.ld li{display:flex;gap:10px;align-items:center;font-size:15px;color:#555;transition:color .2s}
+.ld li::before{content:"";width:8px;height:8px;border-radius:50%;background:#333;flex:none}
+.ld li.now{color:#fff}
+.ld li.now::before{background:var(--red);box-shadow:0 0 10px var(--red)}
+.ld li.done{color:var(--mute)}
+.ld li.done::before{content:"✓";background:none;width:auto;height:auto;color:var(--red);font-size:13px}
+.ld-pct{margin-top:10px;font:900 30px var(--display);font-stretch:112%;text-align:right}
+
+/* dialogs */
+dialog{color:#fff;background:#0d0d0d;border:1px solid var(--line2);padding:0}
+dialog::backdrop{background:rgba(0,0,0,.74);backdrop-filter:blur(3px)}
+dialog.modal{border-radius:18px;width:min(780px,calc(100vw - 28px));margin:auto}
+.dh{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 22px;border-bottom:1px solid var(--line)}
+.dh h3{margin:0;font:900 20px var(--display);font-stretch:112%;letter-spacing:.04em;text-transform:uppercase}
+.x{background:none;border:1px solid var(--line2);width:36px;height:36px;border-radius:9px;font-size:18px;line-height:1}
+.x:hover{border-color:var(--red)}
+.db{padding:22px}
+.how{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:stretch}
+.hw{position:relative;border:1px solid var(--line);border-radius:14px;padding:16px 14px;opacity:.3;transition:opacity .4s,border-color .4s}
+.hw.on{opacity:1;border-color:var(--red)}
+.hw svg{width:26px;height:26px;color:var(--red);margin-bottom:10px}
+.hw b{display:block;font:800 14px var(--display);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.hw p{margin:0;font-size:13px;color:var(--mute)}
+.hw:not(:last-child)::after{content:"→";position:absolute;right:-13px;top:50%;transform:translateY(-50%);color:var(--red);font-weight:800;z-index:2;background:#0d0d0d;line-height:1}
+dialog.drawer{margin:0 0 0 auto;height:100dvh;max-height:100dvh;width:min(620px,100vw);border:0;border-left:1px solid var(--line2)}
+dialog.drawer[open]{animation:dr .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes dr{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+.drawer .db{overflow:auto;height:calc(100dvh - 78px)}
+.badge{font:700 10.5px var(--display);letter-spacing:.07em;border:1px solid var(--red);color:#ff8a84;border-radius:6px;padding:4px 7px}
+.filters{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.filters .inp{padding:11px 12px;font-size:14px}
+.li-item{display:grid;grid-template-columns:auto 1fr auto;gap:12px;padding:14px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:#111}
+.li-item h5{margin:0 0 4px;font:700 15px var(--body)}
+.li-item p{margin:0 0 8px;font-size:13.5px;color:var(--mute)}
+.li-item input[type=checkbox]{accent-color:var(--red);width:18px;height:18px;margin-top:3px}
+.del{background:none;border:0;color:var(--dim);font-size:13px}
+.del:hover{color:#fff}
+.cmp{overflow:auto;border:1px solid var(--line);border-radius:12px}
+.cmp table{border-collapse:collapse;min-width:100%;font-size:13.5px}
+.cmp th,.cmp td{padding:12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;min-width:170px}
+.cmp th:first-child,.cmp td:first-child{min-width:96px;color:var(--dim);font:800 11.5px var(--display);letter-spacing:.07em;text-transform:uppercase}
+.empty{padding:40px 10px;text-align:center;color:var(--mute)}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:#1c1c1c;border:1px solid var(--line2);border-radius:10px;padding:11px 18px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:200}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr}
+  .hero-ad{display:none}
+  .top2{grid-template-columns:1fr}
+  .tests{grid-template-columns:1fr 1fr}
+  .flow{grid-template-columns:repeat(6,150px);overflow-x:auto;padding-bottom:10px;scroll-snap-type:x proximity}
+  .flow::before{display:none}
+  .fs{scroll-snap-align:start}
+}
+@media (max-width:720px){
+  .top-in{flex-wrap:wrap;gap:8px 12px;padding:10px 16px}
+  .steps{order:3;flex:1 0 100%;justify-content:flex-start;gap:6px}
+  .st .lb{display:none}
+  .st.on .lb{display:inline}
+  .sep{flex:1 1 12px;max-width:none}
+  .st.on::after{bottom:-6px}
+  .lib-btn span{display:none}
+  main{padding:16px 16px 50px}
+  .panel{padding:20px}
+  .grid2,.cards,.two,.crea,.ctas,.tests,.filters{grid-template-columns:1fr}
+  .diag{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .legend{justify-content:center}
+  .kv div{grid-template-columns:1fr}
+  .dna-r{grid-template-columns:1fr;gap:6px}
+  .mtr{grid-template-columns:1fr;gap:4px}
+  .mtr.h{display:none}
+  .mtr .fix::before{content:"Se estiver ruim, mexa em: ";color:var(--dim)}
+  .item{grid-template-columns:1fr}
+  .scene{grid-template-columns:1fr}
+  .scene dl{grid-template-columns:1fr;gap:0}
+  .scene dt{margin-top:8px}
+  .how{grid-template-columns:1fr 1fr}
+  .hw:not(:last-child)::after{display:none}
+  .btn{width:100%}
+  .btn.sm{width:auto}
+  .actions .txtbtn{width:100%;text-align:left}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0ms!important}
+  .scan{display:none}
+}
+</style>
+</head>
+<body>
+<div class="glow" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="top-in">
+    <button class="logo" id="logo" aria-label="AD X-RAY — início">
+      <svg viewBox="0 0 26 26" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="23" height="23" rx="6" stroke="#f0180f" stroke-width="2"/><path d="M7 7l12 12M19 7L7 19" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <span>AD <b>X-RAY</b></span>
+    </button>
+    <nav class="steps" id="steps" aria-label="Etapas"></nav>
+    <button class="lib-btn" id="libOpen" aria-label="Minha biblioteca">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h4v14H4zM10 5h4v14h-4zM16.5 6.5l3.6-1 3 13-3.6 1z" transform="translate(-1 0)"/></svg>
+      <span>MINHA BIBLIOTECA</span>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <div class="backrow"><button class="back" id="back" hidden>← VOLTAR</button></div>
+
+  <!-- PÁGINA 1 -->
+  <section class="page" id="p1" aria-labelledby="h1">
+    <div class="hero">
+      <div>
+        <p class="tagline">Veja o que existe por trás de um anúncio.</p>
+        <h1 class="h1 disp" id="h1"><span class="hl-block">DESCUBRA O QUE FAZ</span><span class="hl-red">UM ANÚNCIO FUNCIONAR.</span></h1>
+        <p class="sub">Cole um anúncio da Meta e transforme o criativo em uma análise estratégica pronta para você estudar, testar e recriar.</p>
+      </div>
+      <div class="hero-ad" id="heroAd" aria-hidden="true"></div>
+    </div>
+
+    <div class="panel">
+      <h2>ANALISAR NOVO ANÚNCIO</h2>
+      <label class="lbl" for="url">Cole o link do anúncio</label>
+      <input class="inp" id="url" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://facebook.com/ads/library/...">
+      <p class="hint">Aceita qualquer link (Meta, TikTok, YouTube, site). O app guarda o link como referência e não abre o conteúdo dele. Para a análise, suba a imagem ou o vídeo e cole a copy.</p>
+
+      <div class="or">OU ENVIE SEU CRIATIVO</div>
+      <div class="chips">
+        <button class="chip" id="chipImg" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg>Imagem ou print</button>
+        <button class="chip" id="chipVid" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg>Vídeo</button>
+        <button class="chip" id="chipCopy" type="button" aria-pressed="false" aria-controls="copyWrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6h14M5 12h14M5 18h9"/></svg>Colar a copy</button>
+      </div>
+      <input type="file" id="file" accept="image/*" hidden>
+      <input type="file" id="fileV" accept="video/*" hidden>
+      <div class="fileinfo" id="fileinfo" hidden></div>
+
+      <div id="copyWrap" hidden style="margin-top:16px">
+        <label class="lbl" for="copy">Copy do anúncio</label>
+        <textarea class="inp" id="copy" placeholder="Cole aqui o texto do anúncio: primeira frase, descrição e chamada final."></textarea>
+        <p class="hint">Com a copy, a análise usa o texto real do seu anúncio.</p>
+      </div>
+
+      <details class="more">
+        <summary>Detalhes do anúncio (opcional)</summary>
+        <div class="grid2">
+          <div><label class="lbl" for="mName">Nome</label><input class="inp" id="mName" autocomplete="off" placeholder="Ex.: Anúncio 03 — promo"></div>
+          <div><label class="lbl" for="mProd">Produto</label><input class="inp" id="mProd" autocomplete="off" placeholder="Ex.: Curso de edição"></div>
+          <div><label class="lbl" for="mNiche">Nicho</label><input class="inp" id="mNiche" autocomplete="off" placeholder="Ex.: edição de vídeo"></div>
+          <div><label class="lbl" for="mComp">Concorrente</label><input class="inp" id="mComp" autocomplete="off" placeholder="Ex.: Marca X"></div>
+        </div>
+      </details>
+
+      <div class="err" id="err" role="alert" hidden></div>
+
+      <div class="actions">
+        <button class="btn" id="go" type="button">ANALISAR ANÚNCIO <span class="ar">→</span></button>
+        <button class="btn ghost" id="how" type="button">VER COMO FUNCIONA</button>
+        <button class="txtbtn" id="demo" type="button">Ver um exemplo de análise</button>
+      </div>
+    </div>
+
+    <footer class="foot">
+      <b>AD <i>X-RAY</i></b>
+      <span>Inteligência para análise de anúncios.</span>
+    </footer>
+  </section>
+
+  <!-- PÁGINAS 2-4 -->
+  <section class="page" id="p2" hidden></section>
+  <section class="page" id="p3" hidden></section>
+  <section class="page" id="p4" hidden></section>
+</main>
+
+<div class="loader" id="loader" hidden role="status" aria-live="polite">
+  <div class="scan"></div>
+  <div class="ld">
+    <h3 id="ldTitle"></h3>
+    <ul id="ldSteps"></ul>
+    <div class="bar"><i id="ldBar"></i></div>
+    <div class="ld-pct" id="ldPct">0%</div>
+  </div>
+</div>
+
+<dialog class="modal" id="howDlg" aria-labelledby="howT">
+  <div class="dh"><h3 id="howT">Como funciona</h3><button class="x" data-close aria-label="Fechar">×</button></div>
+  <div class="db">
+    <div class="how" id="howFlow">
+      <div class="hw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 15l5-4 4 3 3-2 6 4"/></svg><b>Anúncio</b><p>Cole o link, envie o criativo ou cole a copy.</p></div>
+      <div class="hw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></svg><b>IA</b><p>Separa o que é observado, o que é inferência e o que é sugestão.</p></div>
+      <div class="hw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3M3 12h18"/></svg><b>Raio-X</b><p>Hook, ângulo, oferta, CTA, público e estrutura.</p></div>
+      <div class="hw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/></svg><b>Novas ideias</b><p>Hooks, ângulos, copies, roteiros e CTAs para testar.</p></div>
+    </div>
+    <p class="note">Nesta versão, o motor de análise aplica regras ao texto que você fornece. A integração com IA e com a API oficial da Meta já está preparada na arquitetura.</p>
+    <div class="actions"><button class="btn sm" id="howDemo" type="button">Ver um exemplo →</button><button class="btn ghost sm" data-close type="button">Fechar</button></div>
+  </div>
+</dialog>
+
+<dialog class="drawer" id="libDlg" aria-labelledby="libT">
+  <div class="dh"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h3 id="libT">Minha biblioteca</h3><span class="badge">BETA · SALVA NESTE NAVEGADOR</span></div><button class="x" data-close aria-label="Fechar">×</button></div>
+  <div class="db" id="libBody"></div>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ============ utilidades ============ */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep=ms=>new Promise(r=>setTimeout(r,reduce?Math.min(ms,50):ms));
+const cut=(s,n)=>s.length>n?s.slice(0,n-1).trim()+'…':s;
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const store={
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}
+};
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),1800)}
+async function copyText(t){
+  try{await navigator.clipboard.writeText(t);return true}catch(e){
+    try{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0;top:0';document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return ok}catch(e2){return false}
+  }
+}
+function countUp(el,to,dur=1000){
+  if(reduce){el.textContent=to;return}
+  const t0=performance.now();
+  (function f(t){const p=Math.min(1,(t-t0)/dur);el.textContent=Math.round(to*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f)})(t0);
+}
+
+/* ============ rótulos de origem ============ */
+const SRC={plan:'DO SEU PLANO',obs:'OBSERVADO',inf:'INFERÊNCIA',sug:'SUGESTÃO DE TESTE',na:'NÃO DISPONÍVEL',ni:'NÃO IDENTIFICADO'};
+const tag=k=>`<span class="tag t-${k}">${SRC[k]}</span>`;
+
+/* ============ motor de análise ============ */
+const ANGLES={
+  tempo:{name:'Economia de tempo',tags:['Facilidade','Rapidez'],emotion:'Alívio / praticidade',desire:'Economizar tempo e simplificar a tarefa',audience:'procuram praticidade e querem resolver algo em menos tempo, sem complicação',
+    kw:['tempo','rapid','minuto','segundo','agil','imediat','facil','simples','pratic','automat']},
+  dinheiro:{name:'Economia de dinheiro',tags:['Preço','Oferta'],emotion:'Segurança / sensação de ganho',desire:'Gastar menos ou ganhar mais',audience:'estão atentas a custo-benefício e buscam pagar menos ou ganhar mais',
+    kw:['dinheiro','economi','desconto','gratis','gratuit','barat','r$','promo','preco','%','parcel']},
+  problema:{name:'Problema → Solução',tags:['Dor','Solução'],emotion:'Alívio / identificação',desire:'Resolver um incômodo do dia a dia',audience:'convivem com um incômodo recorrente e procuram uma saída clara',
+    kw:['problema','dor ','cansad','frustr','erro','pare de','chega de','sofr','dificil','travad','perdendo']},
+  transformacao:{name:'Transformação',tags:['Antes/Depois','Resultado'],emotion:'Esperança / aspiração',desire:'Sair de uma situação atual para uma melhor',audience:'querem mudar de situação e se veem no resultado prometido',
+    kw:['antes e depois','antes','depois','transform','mudou','mudanca','resultado','conquist','sair de']},
+  pessoal:{name:'Relato pessoal (UGC)',tags:['Autenticidade','Identificação'],emotion:'Confiança / identificação',desire:'Fazer o que outra pessoa comum já conseguiu',audience:'confiam mais em experiências de pessoas comuns do que em promessas da marca',
+    kw:['eu ','minha','meu ','testei','descobri','aconteceu']},
+  curiosidade:{name:'Curiosidade',tags:['Lacuna de informação'],emotion:'Curiosidade / expectativa',desire:'Saber o que ainda não sabem',audience:'são atraídas por informações novas e por saber o que estão deixando passar',
+    kw:['segredo','ninguem','descobr','revel','verdade','curios','voce sabia','por que']},
+  direto:{name:'Benefício direto',tags:['Clareza'],emotion:'Clareza / interesse',desire:'Obter o benefício principal do produto',audience:'já sabem o que procuram e valorizam uma oferta objetiva',kw:[]}
+};
+const esk=k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const hits=(n,kws)=>kws.filter(k=>new RegExp((/^\w/.test(k)?'\\b':'')+esk(k)).test(n));
+const splitS=t=>t.replace(/\r/g,'').split(/\n+/).flatMap(l=>l.split(/(?<=[.!?…])\s+/)).map(s=>s.trim()).filter(Boolean);
+const findS=(ss,kws,from=0)=>{for(let i=from;i<ss.length;i++){if(hits(norm(ss[i]),kws).length)return i}return -1};
+
+const K={
+  problem:['problema','dor ','cansad','frustr','erro','pare de','chega de','sofr','dificil','travad','perdendo','nao consegue','nao funciona','demora','complicad','perde','gasta'],
+  agit:['pior','cada vez','continua','imagine','custa','todo dia','todos os dias','frustr','cansad','enquanto isso','ate quando','perdendo'],
+  sol:['solucao','resolve','metodo','sistema','aprenda','descubra','permite','ferramenta','forma de','maneira de','jeito','como funciona','ensina'],
+  proof:['mil ','clientes','alunos','avaliac','depoimento','resultado','garantia','antes e depois','comprovad','estudo','anos de','testado','aprovad'],
+  mech:['metodo','sistema','passo a passo','tecnica','formula','ferramenta','usando','atraves','com apenas','basta'],
+  desire:['quero','quer ','sonho','conquist','liberdade','ganhar','emagrec','crescer','vender','aprender','ter mais','viver de'],
+  benefit:['voce vai','voce pode','para que','permite','ajuda','ganhe','aprenda','consiga','em minutos','em segundos','em poucos','mais rapido','sem precisar'],
+  urg:['vagas','ultimas','so hoje','encerra','acaba','tempo limitado']
+};
+const CTA_MAP=[
+  ['Comprar',['compre','comprar','garanta','adquira','pedir','peca ']],
+  ['Testar',['teste','experimente','comece gratis']],
+  ['Cadastrar',['inscreva','cadastr','baixe','receba','participe']],
+  ['Ver oferta',['ver oferta','aproveite','so hoje','ultimas']],
+  ['Conhecer',['conheca','descubra','veja como','veja ']],
+  ['Saiba mais',['saiba mais','clique','acesse','toque','link'] ]
+];
+const STRUCT=[
+  {key:'hook',label:'HOOK',explain:'Abertura que prende a atenção nos primeiros segundos. Define se a pessoa continua ou segue rolando o feed.',test:''},
+  {key:'problema',label:'PROBLEMA',explain:'Mostra a situação que incomoda o público e cria identificação.',test:'Teste abrir descrevendo a situação que incomoda antes de apresentar o produto.'},
+  {key:'agitacao',label:'AGITAÇÃO',explain:'Amplifica as consequências do problema para criar urgência em resolver.',test:'Teste mostrar o custo de continuar como está (tempo, dinheiro ou frustração).'},
+  {key:'solucao',label:'SOLUÇÃO',explain:'Apresenta o caminho para resolver: o produto, o método ou o mecanismo.',test:'Teste explicar em uma frase como o produto resolve o problema.'},
+  {key:'prova',label:'PROVA',explain:'Reduz a dúvida com resultado, depoimento, número ou demonstração.',test:'Teste incluir um número, depoimento ou demonstração visual do resultado.'},
+  {key:'cta',label:'CTA',explain:'Diz exatamente qual é o próximo passo que o anunciante quer.',test:'Teste fechar com uma ação única e explícita, como "Veja como funciona".'}
+];
+const CREA_KEYS=['Primeiros segundos','Uso de pessoas','Produto','Texto na tela','Demonstração','Ritmo','Mudanças de cena','Elementos visuais','Prova','Clareza da oferta'];
+
+function analyzeCopy(text,meta,media){
+  const ss=splitS(text), n=norm(text);
+  const hookRaw=ss[0]||text, hook=cut(hookRaw,160), hn=norm(hook);
+  // hook
+  const f=[];
+  if(/\?/.test(hook))f.push(['Pergunta','uma pergunta, que convida o público a se posicionar',12]);
+  if(/\d/.test(hook))f.push(['Número','um número, que dá especificidade',10]);
+  if(hits(hn,K.problem).length)f.push(['Problema','a menção a um problema',12]);
+  if(hits(hn,ANGLES.curiosidade.kw).length)f.push(['Curiosidade','uma promessa de informação que o público ainda não tem',12]);
+  if(/\b(voce|voces|seu|sua|seus|suas)\b/.test(hn))f.push(['Direcionado ao público','uma fala direcionada ao público ("você")',8]);
+  if(hits(hn,['eu ','minha','meu ','descobri','testei']).length)f.push(['Pessoal','um relato em primeira pessoa',8]);
+  const hookType=f.length?f.slice(0,2).map(x=>x[0]).join(' + '):'Afirmação direta';
+  const hookScore=Math.min(96,40+f.reduce((a,x)=>a+x[2],0)+(hook.length<=90?6:0));
+  const hookWhy='Primeira frase da copy com '+(f.length?f.slice(0,3).map(x=>x[1]).join('; '):'uma afirmação direta, sem elementos claros de pergunta, número ou problema')+'.';
+  // ângulo
+  let best='direto',bc=0,matched=[];
+  for(const k of Object.keys(ANGLES)){const h=hits(n,ANGLES[k].kw);if(h.length>bc){bc=h.length;best=k;matched=h}}
+  const ang=ANGLES[best];
+  const angWhy=matched.length?'Termos que sustentam este ângulo na copy: '+matched.slice(0,5).map(x=>'"'+x.trim()+'"').join(', ')+'.':'Nenhum termo forte de outro ângulo apareceu; a copy comunica o benefício de forma direta.';
+  // problema
+  let pi=findS(ss,K.problem,1);
+  const hookProb=hits(hn,K.problem).length>0;
+  const problem=pi>=0?{text:ss[pi],src:'obs'}:(hookProb?{text:hook,src:'obs'}:{text:'Não identificado explicitamente na copy.',src:'ni'});
+  // desejo
+  let di=findS(ss,K.desire);
+  const desire=di>=0?{text:ss[di],src:'obs'}:{text:ang.desire,src:'inf'};
+  // CTA
+  let ctaIdx=-1,ctaAct='Não identificado';
+  for(let i=ss.length-1;i>=0;i--){const s=norm(ss[i]);const m=CTA_MAP.find(c=>hits(s,c[1]).length);if(m){ctaIdx=i;ctaAct=m[0];break}}
+  // oferta
+  const price=text.match(/R\$\s?\d+(?:[.,]\d+)*/i);
+  const el=[];
+  if(price)el.push('Preço '+price[0]);
+  if(hits(n,['gratis','gratuit']).length)el.push('Gratuito');
+  if(hits(n,['garantia']).length)el.push('Garantia');
+  if(hits(n,['desconto','promo','%']).length)el.push('Desconto ou promoção');
+  if(hits(n,['bonus']).length)el.push('Bônus');
+  if(hits(n,K.urg).length)el.push('Urgência ou escassez');
+  let bi=-1;for(let i=1;i<ss.length;i++){if(i!==pi&&hits(norm(ss[i]),K.benefit).length){bi=i;break}}
+  if(bi<0){const si=findS(ss,K.sol,1);if(si>=0&&si!==pi)bi=si}
+  const benefit=bi>=0?ss[bi]:'Não identificado explicitamente na copy.';
+  const offer={
+    sold:meta.product||'Não informado. Preencha o campo Produto.',
+    benefit,transformation:ang.desire,
+    presentation:el.length?el.join(', '):'Sem condição comercial explícita na copy.',
+    src:{sold:meta.product?'obs':'na',benefit:bi>=0?'obs':'ni',transformation:'inf',presentation:'obs'}
+  };
+  // prova, mecanismo
+  const pr=hits(n,K.proof);const pri=findS(ss,K.proof,1);
+  const proof={text:pri>=0?ss[pri]:'Nenhuma prova explícita na copy.',found:pri>=0};
+  const mi=findS(ss,K.mech,1);
+  const mech={text:mi>=0?ss[mi]:'Não identificado explicitamente.',found:mi>=0};
+  // estrutura
+  const has={hook:true,problema:pi>=0||hookProb,agitacao:findS(ss,K.agit,1)>=0,solucao:findS(ss,K.sol,1)>=0,prova:pri>=0,cta:ctaIdx>=0};
+  const ev={hook:hook,problema:pi>=0?ss[pi]:hook,agitacao:ss[findS(ss,K.agit,1)],solucao:ss[findS(ss,K.sol,1)],prova:ss[pri],cta:ss[ctaIdx]};
+  const structure=STRUCT.map(s=>({...s,present:has[s.key],evidence:has[s.key]?ev[s.key]:''}));
+  const nPresent=structure.filter(s=>s.present).length;
+  const score=Math.min(96,Math.round(20+hookScore*.25+nPresent*7+(el.length?5:0)+(text.length>=120?4:0)));
+  return {
+    mode:'copy',media,meta,sents:ss,ctaIdx,score,
+    hook:{text:hook,type:hookType,score:hookScore,why:hookWhy},
+    angle:{name:ang.name,tags:ang.tags,why:angWhy},
+    angleKey:best,emotion:ang.emotion,
+    problem,desire,offer,
+    cta:{action:ctaAct,text:ctaIdx>=0?ss[ctaIdx]:'Nenhuma chamada para ação identificada.'},
+    audience:{text:'Pessoas que '+ang.audience+'.'+(meta.niche?' Nicho informado: '+meta.niche+'.':'')},
+    creative:CREA_KEYS.map(k=>({k,v:'Requer análise de imagem ou vídeo, que ainda não está disponível nesta versão.'})),
+    mechanism:mech,proof,structure,
+    dna:{hook:hookType,angle:ang.name,emotion:ang.emotion,desire:ang.desire,mechanism:mech.found?cut(mech.text,90):'Não identificado',proof:proof.found?cut(proof.text,90):'Não identificado',cta:ctaAct==='Não identificado'?'Não identificado':ctaAct+' (ação direta)'},
+    strengths:[
+      ...(f.length?['Hook com '+f.slice(0,2).map(x=>x[0].toLowerCase()).join(' e ')+'.']:[]),
+      ...structure.filter(s=>s.present&&s.key!=='hook').map(s=>(s.key==='cta'?'CTA':s.label[0]+s.label.slice(1).toLowerCase())+' presente na copy.'),
+      ...(el.length?['Condição comercial explícita: '+el.join(', ')+'.']:[])
+    ],
+    tests:structure.filter(s=>!s.present).map(s=>s.test),
+    notice:['Dados não disponíveis para este anúncio. A análise foi realizada com base nas informações fornecidas.','Foi analisado o texto informado. '+(media?'O criativo enviado aparece para consulta, mas a leitura visual dele ainda não está disponível. ':'Sem criativo enviado, não há leitura visual. ')+'Métricas de campanha (CTR, CPC, CPA, ROAS) não são estimadas.'+(meta.url?' O link foi guardado como referência e não foi aberto pelo app.':'')]
+  };
+}
+
+function demoAnalysis(meta,fromUrl){
+  const S=(key,label,evidence,explain)=>({...STRUCT.find(s=>s.key===key),present:true,evidence});
+  return {
+    mode:'demo',media:null,meta,score:86,angleKey:'problema',emotion:'Alívio / praticidade',
+    hook:{text:'Você ainda está fazendo isso desse jeito?',type:'Curiosidade + Problema',score:86,why:'O anúncio começa questionando o comportamento do público e cria uma lacuna de curiosidade.'},
+    angle:{name:'Problema → Solução',tags:['Dor','Facilidade','Demonstração'],why:'O anúncio apresenta um incômodo reconhecível e logo mostra um caminho simples para resolvê-lo.'},
+    problem:{text:'A pessoa está gastando tempo demais fazendo determinada tarefa.',src:'inf'},
+    desire:{text:'Economizar tempo + simplificar a tarefa + obter resultado rapidamente.',src:'inf'},
+    offer:{sold:'Uma solução prática para uma tarefa do dia a dia',benefit:'Fazer a mesma tarefa em menos tempo e com menos esforço',transformation:'De uma rotina lenta e manual para um resultado rápido',presentation:'Demonstração curta do uso, seguida de chamada direta',src:{sold:'inf',benefit:'inf',transformation:'inf',presentation:'obs'}},
+    cta:{action:'Saiba mais',text:'Botão “Saiba mais” ao final do anúncio.'},
+    audience:{text:'Pessoas que procuram praticidade, economia de tempo e uma solução simples para determinado problema.'},
+    creative:[
+      ['Primeiros segundos','Pergunta direta na tela com foco no problema'],['Uso de pessoas','Pessoa falando para a câmera'],['Produto','Aparece em uso, não parado'],['Texto na tela','Frase curta que reforça o hook'],['Demonstração','Passo a passo rápido da solução'],['Ritmo','Rápido, com cortes curtos'],['Mudanças de cena','Troca a cada 2 a 3 segundos'],['Elementos visuais','Contraste alto e destaque no elemento principal'],['Prova','Resultado visual mostrado na tela'],['Clareza da oferta','Alta: dá para entender o que é vendido em poucos segundos']
+    ].map(([k,v])=>({k,v})),
+    mechanism:{text:'Demonstração de uma solução simples',found:true},proof:{text:'Resultado visual',found:true},
+    structure:[
+      S('hook','','“Você ainda está fazendo isso desse jeito?”'),
+      S('problema','','Tempo demais gasto em uma tarefa manual.'),
+      S('agitacao','','Mostra o retrabalho e a frustração de repetir o processo.'),
+      S('solucao','','Apresenta um jeito simples de fazer a mesma tarefa.'),
+      S('prova','','Resultado visual mostrado na tela.'),
+      S('cta','','Botão “Saiba mais” ao final.')
+    ],
+    dna:{hook:'Curiosidade',angle:'Problema/Solução',emotion:'Alívio / praticidade',desire:'Economizar tempo',mechanism:'Demonstração de uma solução simples',proof:'Resultado visual',cta:'Ação direta'},
+    strengths:['Hook em forma de pergunta que expõe o problema.','Demonstração clara da solução.','Prova visual do resultado.','CTA único e direto.'],
+    tests:['Trocar o hook por uma versão em primeira pessoa (UGC).','Testar uma prova numérica em vez de visual.','Testar um CTA mais específico do que “Saiba mais”.'],
+    notice:['Exemplo demonstrativo: os dados abaixo ilustram o formato da análise e não vêm de um anúncio real.'].concat(meta&&meta.url?['O link informado foi guardado como referência e não foi aberto pelo app.']:[])
+  };
+}
+
+/* ============ estado e navegação ============ */
+const state={A:null,cur:1,max:1,tab:'hooks',scriptLen:15,busy:false,media:null};
+const NAV=[['01','ANALISAR'],['02','RAIO-X'],['03','ESTRATÉGIA'],['04','VARIAÇÕES']];
+function renderNav(){
+  $('#steps').innerHTML=NAV.map((x,i)=>{
+    const n=i+1,cls=n===state.cur?'on':(n<state.cur?'done':'');
+    return (i?'<span class="sep"></span>':'')+`<button class="st ${cls}" data-go="${n}" ${n>state.max?'disabled':''} ${n===state.cur?'aria-current="step"':''}><span class="n">${x[0]}</span><span class="lb">${x[1]}</span></button>`;
+  }).join('');
+  $('#back').hidden=state.cur===1;
+}
+function go(n){
+  if(n===state.cur||state.busy)return;
+  state.busy=true;
+  const from=$('#p'+state.cur),to=$('#p'+n),fwd=n>state.cur;
+  from.classList.add(fwd?'out-l':'out-r');
+  setTimeout(()=>{
+    from.hidden=true;from.classList.remove('out-l','out-r');
+    to.hidden=false;to.classList.add(fwd?'in-r':'in-l');
+    setTimeout(()=>to.classList.remove('in-r','in-l'),420);
+    state.cur=n;state.max=Math.max(state.max,n);renderNav();
+    window.scrollTo({top:0,behavior:'auto'});
+    ({2:playRaioX,3:playStrategy,4:playLab})[n]&&({2:playRaioX,3:playStrategy,4:playLab})[n]();
+    state.busy=false;
+  },reduce?0:200);
+}
+
+/* loader */
+const STEPS1=['Capturando anúncio...','Analisando criativo...','Identificando Hook...','Detectando ângulo...','Analisando copy...','Mapeando CTA...','Gerando diagnóstico...'];
+const STEPS2=['Encontrando padrões...','Criando novos ângulos...','Gerando hooks...','Adaptando CTAs...'];
+async function runLoader(title,steps,ms){
+  const L=$('#loader');$('#ldTitle').textContent=title;
+  $('#ldSteps').innerHTML=steps.map(s=>`<li>${esc(s)}</li>`).join('');
+  L.hidden=false;document.body.classList.add('lock');
+  for(let i=0;i<steps.length;i++){
+    $$('#ldSteps li').forEach((li,j)=>{li.className=j<i?'done':j===i?'now':''});
+    const p=Math.round(i/steps.length*100);$('#ldBar').style.width=p+'%';$('#ldPct').textContent=p+'%';
+    await sleep(ms);
+  }
+  $$('#ldSteps li').forEach(li=>li.className='done');
+  $('#ldBar').style.width='100%';$('#ldPct').textContent='100%';
+  await sleep(300);
+  L.hidden=true;document.body.classList.remove('lock');
+}
+
+/* ============ criativo (ilustração / anotação real do texto) ============ */
+function mockAd(labels){
+  return `<div class="ad"><div class="ad-top"><i></i><b>Sua Marca</b><small>Patrocinado</small></div>
+  <div class="ad-copy">Você ainda está fazendo isso desse jeito?</div>
+  <div class="ad-media"><div class="dev"></div></div>
+  <div class="ad-cta"><small>sualoja.com</small><span>Saiba mais</span></div>
+  <i class="sweep"></i>${labels?'<div class="zone z1"><b>HOOK</b></div><div class="zone z2"><b>PRODUTO</b></div><div class="zone z3"><b>CTA</b></div>':''}</div>`;
+}
+function annotatedCopy(A){
+  const parts=A.sents.map((s,i)=>{
+    if(i===0)return `<mark title="Hook">${esc(s)}</mark>`;
+    if(i===A.ctaIdx)return `<mark class="cta" title="CTA">${esc(s)}</mark>`;
+    return esc(s);
+  }).join(' ');
+  return `<div class="copybox"><small>Texto informado. Hook com sublinhado contínuo; CTA com sublinhado tracejado.</small>${parts}</div>`;
+}
+
+/* ============ PÁGINA 2 ============ */
+const row=(l,v,src)=>`<div><dt>${esc(l)}</dt><dd class="${src==='ni'||src==='na'?'na-v':''}">${esc(v)}</dd>${src?tag(src):'<span></span>'}</div>`;
+function renderRaioX(A){
+  const m=A.meta;
+  const linkRef=m.url?`<a class="refl" href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">Abrir anúncio original ↗</a><p class="cap">Fonte: ${esc(hostOf(m.url))}. O app não abriu este link.</p>`:'';
+  const thumb=(A.media?'<div id="mediaSlot"></div>':'')
+    +(A.mode==='demo'&&!A.media?mockAd(true)+'<p class="cap">Ilustração de um criativo de exemplo.</p>':'')
+    +(A.mode==='copy'?annotatedCopy(A):'')
+    +linkRef;
+  const dateStr=new Date().toLocaleDateString('pt-BR');
+  const sub=[m.name,m.product,'Análise de '+dateStr].filter(Boolean).join(' · ');
+  const creaTag=A.mode==='demo'?'inf':'na';
+  $('#p2').innerHTML=`
+  <h2 class="pt disp">RAIO-X DO ANÚNCIO</h2>
+  <p class="pt-sub">${esc(sub)}</p>
+  <div class="banner">${A.notice.map(t=>`<p>${esc(t)}</p>`).join('')}</div>
+
+  <div class="top2">
+    <div class="card flat reveal">${thumb}</div>
+    <div class="card flat reveal">
+      <div class="diag">
+        <div class="gwrap">
+          <svg class="gauge" viewBox="0 0 200 112" aria-hidden="true"><defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#b30c07"/><stop offset="1" stop-color="#ff3b30"/></linearGradient></defs><path class="g-bg" d="M20 100 A80 80 0 0 1 180 100" pathLength="100"/><path class="g-fg" id="gFg" d="M20 100 A80 80 0 0 1 180 100" pathLength="100"/></svg>
+          <div class="g-num"><b id="gNum">0</b><span>/100</span></div>
+        </div>
+        <div>
+          <h3>Diagnóstico geral</h3>
+          <p>Avaliação heurística baseada nos elementos identificados no criativo. Não é uma previsão de desempenho nem substitui teste real.</p>
+        </div>
+      </div>
+      <div class="legend" aria-label="Legenda">${tag('obs')}${tag('inf')}${tag('sug')}</div>
+      <p class="warn">Observado: está no material fornecido. Inferência: conclusão a partir dele. Sugestão de teste: ideia para validar com dados reais.</p>
+    </div>
+  </div>
+
+  <div class="cards">
+    <article class="card reveal"><div class="ch"><h3><i>01</i> Hook</h3>${tag('obs')}</div>
+      <p class="big-q">“${esc(A.hook.text)}”</p><span class="cls">${esc(A.hook.type)}</span>
+      <p>${esc(A.hook.why)}</p>
+      <div class="barrow"><span>Força do Hook</span><b>${A.hook.score}/100</b></div><div class="bar"><i data-w="${A.hook.score}"></i></div>
+    </article>
+    <article class="card reveal"><div class="ch"><h3><i>02</i> Ângulo</h3>${tag('inf')}</div>
+      <p class="big-q">${esc(A.angle.name)}</p>
+      <div class="tags">${A.angle.tags.map(t=>`<span class="pill">${esc(t)}</span>`).join('')}</div>
+      <p>${esc(A.angle.why)}</p>
+    </article>
+    <article class="card reveal"><div class="ch"><h3><i>03</i> Problema</h3>${tag(A.problem.src)}</div>
+      <p class="big-q ${A.problem.src==='ni'?'na-v':''}">${A.problem.src==='obs'?'“'+esc(A.problem.text)+'”':esc(A.problem.text)}</p>
+    </article>
+    <article class="card reveal"><div class="ch"><h3><i>04</i> Desejo</h3>${tag(A.desire.src)}</div>
+      <p class="big-q">${A.desire.src==='obs'?'“'+esc(A.desire.text)+'”':esc(A.desire.text)}</p>
+    </article>
+    <article class="card reveal wide"><div class="ch"><h3><i>05</i> Oferta</h3><span></span></div>
+      <dl class="kv">${row('O que é vendido',A.offer.sold,A.offer.src.sold)}${row('Benefício principal',A.offer.benefit,A.offer.src.benefit)}${row('Transformação prometida',A.offer.transformation,A.offer.src.transformation)}${row('Como é apresentada',A.offer.presentation,A.offer.src.presentation)}</dl>
+    </article>
+    <article class="card reveal"><div class="ch"><h3><i>06</i> CTA</h3>${tag(A.cta.action==='Não identificado'?'ni':'obs')}</div>
+      <p class="big-q ${A.cta.action==='Não identificado'?'na-v':''}">${esc(A.cta.action)}</p>
+      <p>${esc(A.cta.text)}</p>
+      <p class="hint" style="margin:0">Ação desejada pelo anunciante.</p>
+    </article>
+    <article class="card reveal"><div class="ch"><h3><i>07</i> Público provável</h3>${tag('inf')}</div>
+      <p class="big-q">${esc(A.audience.text)}</p>
+      <p class="warn">Público inferido a partir do criativo e da copy. Não representa necessariamente o público real da campanha.</p>
+    </article>
+    <article class="card reveal wide"><div class="ch"><h3><i>08</i> Criativo</h3>${tag(creaTag)}</div>
+      ${A.mode==='copy'?`<p class="na-v" style="color:var(--dim)">A leitura visual do criativo requer imagem ou vídeo e ainda não está disponível nesta versão. Itens que serão analisados:</p><div class="tags">${A.creative.map(c=>`<span class="pill" style="color:var(--dim)">${esc(c.k)}</span>`).join('')}</div>`:`<dl class="crea kv" style="display:grid">${A.creative.map(c=>`<div style="grid-template-columns:1fr;gap:4px"><dt>${esc(c.k)}</dt><dd>${esc(c.v)}</dd></div>`).join('')}</dl>`}
+    </article>
+  </div>
+
+  <h3 class="sec-h disp">ESTRUTURA DETECTADA</h3>
+  <p class="sec-sub">Clique em uma etapa para ver a explicação.</p>
+  <div class="flow" id="flow">${A.structure.map((s,i)=>`<button class="fs ${s.present?'yes':''}" data-s="${i}" aria-pressed="false"><span class="ic">${i+1}</span><b>${esc(s.label)}</b><small>${s.present?'Identificado':'Não identificado'}</small></button>`).join('')}</div>
+  <div class="card flat detail" id="detail"><p style="color:var(--dim)">Selecione uma etapa acima.</p></div>
+
+  <div class="cta-end"><button class="btn big" id="toP3" type="button">VER ANÁLISE COMPLETA <span class="ar">→</span></button></div>`;
+  fillMedia(A.media);
+}
+const hostOf=u=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return u}};
+function fillMedia(m){
+  const slot=$('#mediaSlot');if(!slot||!m)return;
+  const wrap=document.createElement('div');wrap.className='ad ad-img';
+  let el;
+  if(m.type==='video'){el=document.createElement('video');el.controls=true;el.playsInline=true;el.preload='metadata';el.setAttribute('aria-label','Vídeo do criativo enviado')}
+  else{el=document.createElement('img');el.alt='Criativo enviado'}
+  el.src=m.src;wrap.appendChild(el);
+  const sw=document.createElement('i');sw.className='sweep';wrap.appendChild(sw);
+  const cap=document.createElement('p');cap.className='cap';
+  cap.textContent=(m.type==='video'?'Vídeo':'Imagem')+' enviado: '+m.name+'. A leitura visual ainda não está disponível nesta versão.';
+  slot.replaceChildren(wrap,cap);
+  if(m.type==='video')el.addEventListener('error',()=>{cap.textContent='Não foi possível reproduzir este vídeo aqui. Tente um arquivo MP4.'});
+}
+function showStruct(i){
+  const s=state.A.structure[i];
+  $$('#flow .fs').forEach((b,j)=>b.setAttribute('aria-pressed',j===i?'true':'false'));
+  $('#detail').innerHTML=`<h4>${esc(s.label)} ${s.present?tag(state.A.mode==='demo'?'inf':'obs'):tag('ni')}</h4><p>${esc(s.explain)}</p>`
+    +(s.present?`<blockquote>${esc(s.evidence)}</blockquote>`:`<p style="color:var(--mute)">Não identificado na copy fornecida.</p>${s.test?`<blockquote>${tag('sug')} ${esc(s.test)}</blockquote>`:''}`);
+}
+function playRaioX(){
+  const A=state.A;if(!A)return;
+  $$('#p2 .reveal').forEach(e=>e.classList.remove('in'));
+  $$('#p2 .bar i').forEach(i=>i.style.width='0');
+  $('#gFg').style.strokeDashoffset=100;$('#gNum').textContent='0';
+  $('#flow').classList.remove('go');$$('#flow .fs').forEach(f=>f.classList.remove('lit'));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    $$('#p2 .reveal').forEach((e,i)=>{e.style.setProperty('--d',(reduce?0:i*70)+'ms');e.classList.add('in')});
+    $('#gFg').style.strokeDashoffset=100-A.score;countUp($('#gNum'),A.score,1200);
+    setTimeout(()=>$$('#p2 .bar i[data-w]').forEach(i=>i.style.width=i.dataset.w+'%'),350);
+    setTimeout(()=>{$('#flow').classList.add('go');$$('#flow .fs').forEach((f,i)=>setTimeout(()=>f.classList.add('lit'),reduce?0:i*230))},reduce?0:900);
+  }));
+}
+
+/* ============ PÁGINA 3 ============ */
+const PLAN_VSL={
+  funil:[
+    ['Atração','Vídeos curtos orgânicos (Bloco 1) e depois criativos de anúncio (Bloco 2). O criativo só existe para gerar o clique.',true],
+    ['Página com a VSL','Vídeo acima da dobra, botão de compra aparecendo após parte do vídeo e garantia visível.'],
+    ['Checkout','Poucos campos, Pix e cartão, com order bump de um complemento de baixo esforço (templates, scripts).'],
+    ['Upsell pós-compra','Um clique, sem novo checkout, a partir do Bloco 3.'],
+    ['Entrega','Acesso imediato, com o quick win logo no primeiro módulo.'],
+    ['Recuperação','WhatsApp ou e-mail para checkout abandonado, com sequência de 3 mensagens em 48h.'],
+    ['Remarketing','Quem viu 50% ou mais da VSL e não comprou.']
+  ],
+  metricas:[
+    ['Custo por visita (CPV)','até R$ 3','criativo'],
+    ['Custo até checkout','~23% do valor da venda','página/VSL'],
+    ['CPA por venda','abaixo de 45% do valor da venda','oferta e copy'],
+    ['ROAS','2,0 ou mais','tudo acima'],
+    ['CAC','menor que o valor da venda','—'],
+    ['Conversão página → compra','1,5% ou mais','VSL e oferta'],
+    ['% que assiste 50% da VSL','acompanhar e melhorar','gancho e ritmo']
+  ],
+  erros:[
+    ['Tempo','Querer a VSL perfeita antes de publicar.','Com 1–3h por dia isso vira semanas paradas.','Fixe a versão 1 até 26/09 e melhore com dados.'],
+    ['Caixa','Gastar as primeiras vendas em escala antes de a oferta provar o CPA.','','Use o teto de R$ 100 por criativo e escale só com ROAS 2,0 ou mais.'],
+    ['Perfil','Mudar oferta, página e criativo ao mesmo tempo.','Você não saberá o que funcionou.','Altere uma variável por vez e dê 7 dias ou 100 cliques a cada teste.']
+  ]
+};
+const TESTS=[
+  ['TESTE 01','Trocar apenas o Hook.','Mantenha criativo, oferta e CTA. Compare só os primeiros segundos.'],
+  ['TESTE 02','Manter o Hook e mudar o ângulo.','Descubra se o público reage mais a outro benefício com a mesma abertura.'],
+  ['TESTE 03','Manter o criativo e alterar a oferta.','Isole o efeito da condição comercial sem mexer na parte visual.'],
+  ['TESTE 04','Criar uma versão UGC.','Uma pessoa comum contando a experiência, em vez de uma voz de marca.'],
+  ['TESTE 05','Criar uma versão mais direta.','Corte a introdução e vá direto ao benefício e à ação.'],
+  ['TESTE 06','Criar uma versão storytelling.','Conte uma situação com começo, frustração e descoberta antes da oferta.']
+];
+function renderStrategy(A){
+  const D=A.dna;
+  const rows=[['Hook',D.hook,'obs'],['Ângulo',D.angle,'inf'],['Emoção principal',D.emotion,'inf'],['Desejo',D.desire,'inf'],['Mecanismo',D.mechanism,A.mechanism.found?'obs':'ni'],['Prova',D.proof,A.proof.found?'obs':'ni'],['CTA',D.cta,D.cta==='Não identificado'?'ni':'obs']];
+  $('#p3').innerHTML=`
+  <h2 class="pt disp" style="font-size:clamp(28px,4.4vw,54px)">DESMONTAMOS O ANÚNCIO. AGORA VAMOS ENTENDER A ESTRATÉGIA.</h2>
+  <h3 class="sec-h disp" style="margin-top:34px">DNA DO ANÚNCIO</h3>
+  <div class="card flat dna" style="margin-top:14px">${rows.map(r=>`<div class="dna-r reveal"><span>${r[0]}</span><strong>${esc(r[1])}</strong>${tag(r[2])}</div>`).join('')}</div>
+  <div class="two">
+    <div class="card flat reveal"><div class="ch"><h3>Pontos fortes</h3>${tag('obs')}</div><ul class="li">${(A.strengths.length?A.strengths:['Nenhum ponto forte claro foi identificado na copy fornecida.']).map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>
+    <div class="card flat reveal"><div class="ch"><h3>Pontos a testar</h3>${tag('sug')}</div><ul class="li t">${(A.tests.length?A.tests:['Todas as etapas foram identificadas. Teste variações de hook e de CTA.']).map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>
+  </div>
+  <h3 class="sec-h disp">O QUE VOCÊ PODE TESTAR</h3>
+  <p class="sec-sub">Mude uma variável por vez para saber o que gerou a diferença.</p>
+  <div class="tests">${TESTS.map(t=>`<article class="card test"><span class="k">${t[0]}</span><h4>${t[1]}</h4><p>${t[2]}</p><div style="margin-top:12px">${tag('sug')}</div></article>`).join('')}</div>
+  <h3 class="sec-h disp">ESTRUTURA DO FUNIL VSL</h3>
+  <div class="plan-h" style="margin-bottom:6px">${tag('plan')}<span class="sec-sub" style="margin:0">Do seu plano de VSL. Em qual etapa do funil cada peça atua.</span></div>
+  <div class="card flat"><ol class="fun">${PLAN_VSL.funil.map((f,i)=>`<li><span class="nb">${i+1}</span><div><h4>${esc(f[0])}${f[2]?'<span class="pill">Aqui atua o anúncio analisado</span>':''}</h4><p>${esc(f[1])}</p></div></li>`).join('')}</ol></div>
+
+  <h3 class="sec-h disp">MÉTRICAS-ALVO</h3>
+  <div class="plan-h" style="margin-bottom:14px">${tag('plan')}<span class="sec-sub" style="margin:0">Metas de referência do seu plano. Não são resultados do anúncio analisado.</span></div>
+  <div class="card flat">
+    <div class="mtr h"><span>Métrica</span><span>Meta</span><span>Se estiver ruim, mexa em</span></div>
+    ${PLAN_VSL.metricas.map(r=>`<div class="mtr"><span>${esc(r[0])}</span><b>${esc(r[1])}</b><span class="fix">${esc(r[2])}</span></div>`).join('')}
+    <p class="note">São estimativas de partida, não garantias.</p>
+  </div>
+
+  <h3 class="sec-h disp">OS 3 ERROS MAIS PROVÁVEIS</h3>
+  <div class="plan-h" style="margin-bottom:14px">${tag('plan')}<span class="sec-sub" style="margin:0">Do seu plano de VSL.</span></div>
+  <div class="tests">${PLAN_VSL.erros.map(e=>`<article class="card test"><span class="k">${esc(e[0]).toUpperCase()}</span><h4>${esc(e[1])}</h4>${e[2]?`<p>${esc(e[2])}</p>`:''}<p style="color:#e6e6e6!important"><b>Como evitar:</b> ${esc(e[3])}</p></article>`).join('')}</div>
+
+  <div class="cta-end"><button class="btn big" id="toP4" type="button">GERAR VARIAÇÕES <span class="ar">→</span></button></div>`;
+}
+function playStrategy(){
+  $$('#p3 .reveal').forEach((e,i)=>{e.classList.remove('in');e.style.setProperty('--d',(reduce?0:i*60)+'ms')});
+  requestAnimationFrame(()=>requestAnimationFrame(()=>$$('#p3 .reveal').forEach(e=>e.classList.add('in'))));
+}
+
+/* ============ PÁGINA 4 ============ */
+const CP=[];const cp=t=>{CP.push(t);return CP.length-1};
+const cbtn=t=>`<button class="cpy" data-ci="${cp(t)}" type="button">COPIAR</button>`;
+function lab(A){
+  const tp=A.meta.niche||A.meta.product||'',w=tp||'isso',ab=tp||'esse assunto',prod=A.meta.product;
+  return {
+    hooks:[
+      ['Confissão + Erro','Eu não acredito que passei tanto tempo fazendo isso do jeito errado.'],
+      ['Desafio ao hábito','Se você ainda faz isso manualmente, precisa ver isso.'],
+      ['Promessa de tempo','Descobri uma forma de fazer isso em menos de 30 segundos.'],
+      ['Curiosidade','Ninguém te conta isso sobre '+ab+'.'],
+      ['Lista + Erro','3 erros que quase todo mundo comete com '+w+'.']
+    ],
+    angles:[
+      ['Economia de tempo','Mostrar a tarefa antes e depois, com um cronômetro visível na tela.','É um benefício fácil de demonstrar nos primeiros segundos e fácil de comparar com a rotina do público.'],
+      ['Economia de dinheiro','Comparar o custo do jeito atual com o custo da solução, com números na tela.','Testa se o público reage mais ao ganho financeiro do que ao ganho de tempo.'],
+      ['Problema cotidiano','Abrir com uma cena real do dia a dia em que o problema aparece, sem mencionar a solução.','Testa se o público se reconhecer na cena segura mais a atenção do que prometer o resultado.'],
+      ['Curiosidade','Criar uma lacuna de informação: sugerir que existe um jeito melhor sem mostrar como nos primeiros segundos.','Testa se a dúvida gera mais retenção do que a promessa direta.'],
+      ['Transformação','Mostrar o antes e o depois da rotina de quem passou a usar a solução.','Testa se o resultado final vende melhor do que o processo.']
+    ],
+    copies:[
+      {n:'DIRETA',seq:['Hook','Problema','Solução','Benefício','CTA'],l:[
+        ['Hook','Você ainda perde tempo com '+w+'?'],
+        ['Problema','Fazer do jeito manual é lento, repetitivo e cheio de erros.'],
+        ['Solução','Existe um jeito mais simples de resolver isso'+(prod?': '+prod+'.':'.')],
+        ['Benefício','Menos tempo gasto, menos retrabalho e resultado mais rápido.'],
+        ['CTA','Clique para conhecer.']]},
+      {n:'UGC',seq:['Experiência pessoal','Descoberta','Demonstração','Resultado','CTA'],l:[
+        ['Experiência','Eu vivia perdendo horas com '+w+' e achava que não tinha outro jeito.'],
+        ['Descoberta','Aí um amigo me mostrou uma forma bem mais simples.'],
+        ['Demonstração','Olha como eu faço agora. (Mostre o passo a passo na tela.)'],
+        ['Resultado','O que antes tomava minha tarde agora resolvo em poucos minutos. (Ajuste ao resultado real.)'],
+        ['CTA','Se quiser ver como funciona, clica no link.']]},
+      {n:'STORYTELLING',seq:['Situação','Problema','Frustração','Descoberta','Solução','CTA'],l:[
+        ['Situação','Era uma noite comum e eu ainda estava ali, tentando resolver '+w+' do mesmo jeito de sempre.'],
+        ['Problema','Cada tentativa levava mais tempo do que a anterior.'],
+        ['Frustração','Eu sentia que estava trabalhando muito e avançando pouco.'],
+        ['Descoberta','Até que encontrei um jeito diferente de fazer.'],
+        ['Solução',(prod?prod+' mudou':'Essa solução mudou')+' a forma como eu resolvo isso: mais simples, mais rápido, sem complicação.'],
+        ['CTA','Veja como funciona.']]}
+    ],
+    scripts:{
+      15:[
+        ['0–3s','Close no rosto ou na tela mostrando o problema','Eu não acredito que passei tanto tempo fazendo isso do jeito errado.','Do jeito errado?','Corte rápido, olhar direto para a câmera','—'],
+        ['3–11s','Demonstração da solução na tela ou com o produto','Olha como fica em poucos segundos.','Em poucos segundos','Mostrar antes e depois lado a lado','—'],
+        ['11–15s','Resultado final com o produto em destaque','Quer ver como funciona? Clica no botão.','Veja como funciona','Apontar para o botão','Veja como funciona.']
+      ],
+      30:[
+        ['0–3s','Close no problema','Você ainda está fazendo isso desse jeito?','Ainda fazendo assim?','Olhar para a câmera','—'],
+        ['3–10s','Cena do dia a dia com a tarefa manual','Eu perdia tempo com '+w+' e sempre saía do mesmo jeito: cansado e sem resultado.','Tempo perdido','Mostrar a repetição da tarefa','—'],
+        ['10–20s','Demonstração passo a passo','Aí descobri uma forma mais simples. Olha só: é assim que eu faço agora.','Passo a passo','Tela ou produto em uso, cortes curtos','—'],
+        ['20–26s','Resultado na tela','E o resultado aparece muito mais rápido.','Resultado','Antes e depois lado a lado','—'],
+        ['26–30s','Produto e botão em destaque','Se quiser testar, clica em saiba mais.','Saiba mais','Apontar para o botão','Teste essa ideia.']
+      ],
+      60:[
+        ['0–4s','Close no problema','Se você ainda faz isso manualmente, precisa ver isso.','Ainda faz manualmente?','Olhar direto para a câmera','—'],
+        ['4–14s','Situação cotidiana e frustração','Eu passava horas com '+w+' e sentia que trabalhava muito para avançar pouco.','Muito esforço, pouco resultado','Mostrar a rotina antiga','—'],
+        ['14–24s','Momento da descoberta','Até que encontrei um jeito diferente de fazer.','A descoberta','Corte para o novo método','—'],
+        ['24–40s','Demonstração completa','Primeiro eu faço isso, depois isso, e pronto. Sem complicação.','Passo 1, 2, 3','Tela gravada ou produto em uso','—'],
+        ['40–50s','Resultado e prova','O resultado aparece em minutos e dá para conferir na tela.','Resultado visível','Mostrar resultado real, sem exageros','—'],
+        ['50–56s','Resposta a uma dúvida comum','Não precisa de experiência nem de nada complicado.','Sem complicação','Falar direto para a câmera','—'],
+        ['56–60s','Chamada final','Clica no botão e veja como funciona.','Veja como funciona','Apontar para o botão','Veja como funciona.']
+      ]
+    },
+    ctas:['Clique para conhecer.','Veja como funciona.','Descubra a solução.','Teste essa ideia.','Conheça agora.','Saiba mais no link.']
+  };
+}
+const TABS=[['hooks','HOOKS'],['angles','ÂNGULOS'],['copies','COPIES'],['scripts','ROTEIROS'],['ctas','CTAs']];
+function renderLab(A){
+  $('#p4').innerHTML=`
+  <h2 class="pt disp" style="font-size:clamp(28px,4.4vw,54px)">TRANSFORME UM ANÚNCIO EM DEZENAS DE NOVOS TESTES.</h2>
+  <div class="tabs" role="tablist" id="tabs">${TABS.map(t=>`<button class="tab" role="tab" id="tab-${t[0]}" data-tab="${t[0]}" aria-selected="${t[0]===state.tab}" tabindex="${t[0]===state.tab?0:-1}">${t[1]}</button>`).join('')}</div>
+  <div id="labPanel" role="tabpanel"></div>
+  <div class="end-actions"><button class="btn sm" id="saveLib" type="button">SALVAR NA BIBLIOTECA</button><button class="btn ghost sm" id="newA" type="button">NOVA ANÁLISE</button></div>`;
+  renderTab();
+}
+function renderTab(){
+  const A=state.A;if(!A)return;CP.length=0;
+  const L=lab(A);let h='';
+  $$('#tabs .tab').forEach(t=>{const on=t.dataset.tab===state.tab;t.setAttribute('aria-selected',on);t.tabIndex=on?0:-1});
+  const head=(txt,all)=>`<div class="lab-head"><p>${txt}</p>${all?`<button class="cpy" data-ci="${cp(all)}" type="button">COPIAR TUDO</button>`:''}</div>`;
+  if(state.tab==='hooks'){
+    h=head('Cinco hooks baseados na estrutura analisada. Hook original: “'+esc(A.hook.text)+'”',L.hooks.map(x=>x[1]).join('\n'))
+     +`<div class="list">${L.hooks.map((x,i)=>`<div class="card item"><div><h4>Hook ${String(i+1).padStart(2,'0')} · ${esc(x[0])}</h4><q>${esc(x[1])}</q></div>${cbtn(x[1])}</div>`).join('')}</div>`;
+  }else if(state.tab==='angles'){
+    h=head('Cinco ângulos para testar contra o original ('+esc(A.angle.name)+').')
+     +`<div class="cards">${L.angles.map((x,i)=>`<article class="card ang"><div class="ch"><h3><i>${String(i+1).padStart(2,'0')}</i> ${esc(x[0])}</h3>${tag('sug')}</div><dl><dt>Ideia</dt><dd>${esc(x[1])}</dd><dt>Por que testar</dt><dd>${esc(x[2])}</dd></dl></article>`).join('')}</div>`;
+  }else if(state.tab==='copies'){
+    h=head('Três estruturas de copy. Modelos para adaptar: ajuste ao que sua oferta realmente entrega.')
+     +`<div class="list">${L.copies.map(c=>{const plain=c.l.map(x=>x[1]).join('\n');return `<article class="card"><div class="ch"><h3>${c.n}</h3>${cbtn(plain)}</div><div class="seq">${c.seq.map(s=>`<span>${esc(s)}</span>`).join('')}</div><div class="body-l">${c.l.map(x=>`<p><b>${esc(x[0])}</b>${esc(x[1])}</p>`).join('')}</div></article>`}).join('')}</div>`;
+  }else if(state.tab==='scripts'){
+    const S=L.scripts[state.scriptLen];
+    const full=S.map(s=>`${s[0]}\nCena: ${s[1]}\nNarração: ${s[2]}\nTexto na tela: ${s[3]}\nAção: ${s[4]}\nCTA: ${s[5]}`).join('\n\n');
+    h=`<div class="subtabs">${[15,30,60].map(n=>`<button class="chip" data-len="${n}" aria-pressed="${n===state.scriptLen}">${n} segundos</button>`).join('')}</div>`
+     +head('Roteiro de '+state.scriptLen+' segundos, cena a cena.',full)
+     +`<div class="scenes">${S.map((s,i)=>`<article class="scene"><div class="tm">${esc(s[0])}<small>Cena ${i+1}</small></div><dl><dt>Cena</dt><dd>${esc(s[1])}</dd><dt>Narração</dt><dd>“${esc(s[2])}”</dd><dt>Texto na tela</dt><dd>${esc(s[3])}</dd><dt>Ação</dt><dd>${esc(s[4])}</dd><dt>CTA</dt><dd>${esc(s[5])}</dd></dl></article>`).join('')}</div>`;
+  }else{
+    h=head('Seis chamadas para ação para testar no lugar do CTA original.',L.ctas.join('\n'))
+     +`<div class="ctas">${L.ctas.map(c=>`<div class="card"><q>${esc(c)}</q>${cbtn(c)}</div>`).join('')}</div>`;
+  }
+  $('#labPanel').innerHTML=h+`<p class="note">${tag('sug')} Tudo nesta página é sugestão de teste. Nenhum resultado de campanha foi estimado.</p>`;
+}
+function playLab(){}
+
+/* ============ biblioteca (beta, local) ============ */
+const LIB='adxray:library';
+const libState={q:'',angle:'',period:'',sel:new Set(),cmp:false};
+function saveToLib(){
+  const A=state.A;if(!A)return;
+  const lib=store.get(LIB,[]);
+  lib.unshift({id:Date.now().toString(36),date:new Date().toISOString(),name:A.meta.name||A.meta.product||cut(A.hook.text,40),product:A.meta.product||'',niche:A.meta.niche||'',competitor:A.meta.competitor||'',url:A.meta.url||'',hook:A.hook.text,angle:A.angle.name,offer:A.offer.sold,cta:A.cta.action,audience:A.audience.text,score:A.score,demo:A.mode==='demo'});
+  toast(store.set(LIB,lib.slice(0,100))?'Salvo na biblioteca':'Não foi possível salvar neste navegador');
+}
+function renderLib(){
+  const lib=store.get(LIB,[]);const b=$('#libBody');
+  if(libState.cmp){
+    const sel=lib.filter(x=>libState.sel.has(x.id));
+    const rows=[['Hook','hook'],['Ângulo','angle'],['Oferta','offer'],['CTA','cta'],['Público','audience'],['Score','score']];
+    b.innerHTML=`<button class="txtbtn" id="cmpBack" type="button">← Voltar à lista</button><div class="cmp" style="margin-top:12px"><table><thead><tr><th></th>${sel.map(x=>`<th>${esc(x.name)}<br><small style="color:var(--dim);font-weight:400">${new Date(x.date).toLocaleDateString('pt-BR')}</small></th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td>${sel.map(x=>`<td>${esc(r[1]==='score'?x.score+'/100 (heurístico)':x[r[1]])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    return;
+  }
+  const angles=[...new Set(lib.map(x=>x.angle))];
+  const q=norm(libState.q);const now=Date.now();
+  const list=lib.filter(x=>(!q||norm([x.name,x.product,x.niche,x.competitor,x.hook].join(' ')).includes(q))&&(!libState.angle||x.angle===libState.angle)&&(!libState.period||now-new Date(x.date)<=libState.period*864e5));
+  b.innerHTML=`<div class="filters"><input class="inp" id="lq" type="search" placeholder="Buscar por nicho, produto, concorrente ou hook" value="${esc(libState.q)}" aria-label="Buscar"><select class="inp" id="la" aria-label="Ângulo"><option value="">Todos os ângulos</option>${angles.map(a=>`<option ${a===libState.angle?'selected':''}>${esc(a)}</option>`).join('')}</select><select class="inp" id="lp" aria-label="Período"><option value="">Qualquer data</option><option value="7" ${libState.period==='7'?'selected':''}>Últimos 7 dias</option><option value="30" ${libState.period==='30'?'selected':''}>Últimos 30 dias</option></select></div>
+  ${libState.sel.size>=2?`<button class="btn sm" id="cmpGo" type="button" style="margin-bottom:14px">COMPARAR ${libState.sel.size} ANÚNCIOS</button>`:(lib.length>1?'<p class="hint" style="margin:0 0 14px">Marque dois ou mais anúncios para comparar lado a lado.</p>':'')}
+  ${list.length?list.map(x=>`<div class="li-item"><input type="checkbox" data-sel="${x.id}" ${libState.sel.has(x.id)?'checked':''} aria-label="Selecionar ${esc(x.name)}"><div><h5>${esc(x.name)}</h5><p>“${esc(cut(x.hook,90))}”</p><div class="tags"><span class="pill">${esc(x.angle)}</span>${x.niche?`<span class="pill">${esc(x.niche)}</span>`:''}${x.competitor?`<span class="pill">${esc(x.competitor)}</span>`:''}<span class="pill">${esc(x.cta)}</span><span class="pill">${x.score}/100</span>${x.demo?'<span class="pill">exemplo</span>':''}</div><small style="color:var(--dim)">${new Date(x.date).toLocaleDateString('pt-BR')}</small></div><button class="del" data-del="${x.id}" type="button">Excluir</button></div>`).join(''):`<div class="empty">${lib.length?'Nenhum anúncio com esses filtros.':'Nenhum anúncio salvo ainda. Faça uma análise e clique em Salvar na biblioteca.'}</div>`}`;
+}
+
+/* ============ entrada (página 1) ============ */
+function showMsg(m,kind){const e=$('#err');e.textContent=m;e.className='err'+(kind==='info'?' info':'');e.hidden=false}
+const showErr=m=>showMsg(m,'err');
+function normUrl(v){
+  v=v.trim();if(!v)return '';
+  if(!/^[a-z][a-z0-9+.-]*:/i.test(v))v='https://'+v;
+  try{const x=new URL(v);if(!/^https?:$/.test(x.protocol)||!x.hostname.includes('.'))return null;return x.href}catch(e){return null}
+}
+function meta(link){return {url:link||'',name:$('#mName').value.trim(),product:$('#mProd').value.trim(),niche:$('#mNiche').value.trim(),competitor:$('#mComp').value.trim()}}
+function buildAll(A){state.A=A;state.tab='hooks';state.scriptLen=15;renderRaioX(A);renderStrategy(A);renderLab(A)}
+function askCopy(msg){
+  $('#copyWrap').hidden=false;$('#chipCopy').setAttribute('aria-pressed','true');
+  showMsg(msg,'info');$('#copy').focus();
+}
+async function start(forceDemo){
+  if(state.busy)return;
+  $('#err').hidden=true;
+  const link=normUrl($('#url').value);
+  if(link===null)return showErr('Não consegui entender esse link. Cole o endereço completo, por exemplo https://site.com/anuncio.');
+  const m=meta(link),copy=$('#copy').value.trim();
+  let A;
+  if(forceDemo){A=demoAnalysis(m,false)}
+  else if(copy){
+    if(copy.length<20)return showErr('A copy está muito curta. Cole pelo menos uma ou duas frases do anúncio.');
+    A=analyzeCopy(copy,m,state.media);
+  }else if(link){
+    return askCopy('Link guardado como referência. O app não abre o conteúdo do link, então cole aqui a copy do anúncio (e suba a imagem ou o vídeo, se tiver) para continuar.');
+  }else if(state.media){
+    return askCopy('Criativo recebido. Cole a copy do anúncio para analisar o texto.');
+  }else return showMsg('Cole o link do anúncio, suba o criativo ou cole a copy para começar.','info');
+  if(!A.media&&state.media)A.media=state.media;
+  await runLoader('Analisando anúncio',STEPS1,520);
+  buildAll(A);state.max=1;go(2);
+}
+
+/* ============ eventos ============ */
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('button,[data-close]');if(!t)return;
+  if(t.dataset.go){go(+t.dataset.go);return}
+  if(t.dataset.close!==undefined){t.closest('dialog').close();return}
+  if(t.dataset.ci!==undefined){
+    const ok=await copyText(CP[+t.dataset.ci]);
+    if(ok){const o=t.textContent;t.textContent='COPIADO ✓';t.classList.add('ok');setTimeout(()=>{t.textContent=o;t.classList.remove('ok')},1400);toast('Copiado')}else toast('Não foi possível copiar. Selecione o texto e copie manualmente.');
+    return;
+  }
+  if(t.dataset.s!==undefined){showStruct(+t.dataset.s);return}
+  if(t.dataset.tab){state.tab=t.dataset.tab;renderTab();return}
+  if(t.dataset.len){state.scriptLen=+t.dataset.len;renderTab();return}
+  if(t.dataset.del){store.set(LIB,store.get(LIB,[]).filter(x=>x.id!==t.dataset.del));libState.sel.delete(t.dataset.del);renderLib();return}
+  switch(t.id){
+    case 'go':start(false);break;
+    case 'demo':start(true);break;
+    case 'how':case 'howDemo':
+      if(t.id==='howDemo'){$('#howDlg').close();start(true)}else openHow();break;
+    case 'back':go(state.cur-1);break;
+    case 'logo':go(1);break;
+    case 'chipImg':$('#file').click();break;
+    case 'chipVid':$('#fileV').click();break;
+    case 'chipCopy':{const on=t.getAttribute('aria-pressed')!=='true';t.setAttribute('aria-pressed',on);$('#copyWrap').hidden=!on;if(on)$('#copy').focus();break}
+    case 'toP3':go(3);break;
+    case 'toP4':await runLoader('Gerando variações',STEPS2,600);go(4);break;
+    case 'saveLib':saveToLib();break;
+    case 'newA':state.max=1;go(1);break;
+    case 'libOpen':libState.cmp=false;renderLib();$('#libDlg').showModal();break;
+    case 'cmpGo':libState.cmp=true;renderLib();break;
+    case 'cmpBack':libState.cmp=false;renderLib();break;
+  }
+});
+$('#url').addEventListener('keydown',e=>{if(e.key==='Enter')start(false)});
+function handleFile(f,type){
+  if(!f)return;
+  const max=type==='video'?25:8,nome=type==='video'?'vídeo':'arquivo';
+  if(!f.type.startsWith(type+'/'))return showErr('Esse arquivo não é '+(type==='video'?'um vídeo':'uma imagem')+'.');
+  if(f.size>max*1048576)return showErr('O '+nome+' passa de '+max+' MB. '+(type==='video'?'Envie um trecho menor ou comprima o vídeo.':'Envie um arquivo menor.'));
+  const r=new FileReader();
+  r.onload=()=>{
+    state.media={type,src:r.result,name:f.name};
+    const i=$('#fileinfo');i.hidden=false;
+    i.innerHTML=(type==='image'?`<img alt="" src="${r.result}">`:'')+`<span>${esc(f.name)} (${(f.size/1048576).toFixed(1)} MB)</span><button class="txtbtn" id="rmMedia" type="button">Remover</button>`;
+    $('#err').hidden=true;
+  };
+  r.onerror=()=>showErr('Não consegui ler o arquivo. Tente outro.');
+  r.readAsDataURL(f);
+}
+$('#file').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';handleFile(f,'image')});
+$('#fileV').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';handleFile(f,'video')});
+document.addEventListener('click',e=>{if(e.target.id==='rmMedia'){state.media=null;$('#file').value='';$('#fileV').value='';$('#fileinfo').hidden=true}});
+document.addEventListener('keydown',e=>{
+  const tb=e.target.closest&&e.target.closest('#tabs .tab');
+  if(tb&&(e.key==='ArrowRight'||e.key==='ArrowLeft')){
+    const ids=TABS.map(t=>t[0]);let i=ids.indexOf(state.tab)+(e.key==='ArrowRight'?1:-1);i=(i+ids.length)%ids.length;
+    state.tab=ids[i];renderTab();$('#tab-'+ids[i]).focus();
+  }
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='lq'){libState.q=e.target.value;const pos=e.target.selectionStart;renderLib();const n=$('#lq');n.focus();n.setSelectionRange(pos,pos)}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='la'){libState.angle=t.value;renderLib()}
+  if(t.id==='lp'){libState.period=t.value;renderLib()}
+  if(t.dataset&&t.dataset.sel){t.checked?libState.sel.add(t.dataset.sel):libState.sel.delete(t.dataset.sel);renderLib()}
+});
+function openHow(){
+  const d=$('#howDlg');d.showModal();
+  const nodes=$$('#howFlow .hw');nodes.forEach(n=>n.classList.remove('on'));
+  nodes.forEach((n,i)=>setTimeout(()=>n.classList.add('on'),reduce?0:250+i*420));
+}
+
+/* ============ init ============ */
+$('#heroAd').innerHTML=mockAd(true);
+renderNav();
+
+/* PWA: registra o service worker (só em http/https) */
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load',()=>{try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}});
+}
+</script>
+</body>
+</html>
